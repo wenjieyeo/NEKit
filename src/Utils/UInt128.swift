@@ -501,6 +501,77 @@ public func >>=(lhs: inout UInt128, rhs: UInt128) {
 }
 // MARK: IntegerArithmeticType Conformance
 extension UInt128: IntegerArithmetic {
+    public static func <<=<RHS>(lhs: inout UInt128, rhs: RHS) where RHS : BinaryInteger {
+        let v = UInt128(rhs)
+        lhs = lhs << v
+    }
+    
+    public static func >>=<RHS>(lhs: inout UInt128, rhs: RHS) where RHS : BinaryInteger {
+        let v = UInt128(rhs)
+        lhs = lhs >> v
+    }
+    
+    public init<T>(_ source: T) where T : BinaryInteger {
+        if let value = source as? UInt128 {
+            self.init(value)
+        } else{
+            self.init(UInt64(source))
+        }
+    }
+    
+    public init<T>(clamping source: T) where T : BinaryInteger {
+        if let value = source as? UInt128 {
+            self.init(value)
+        } else{
+            self.init(UInt64(clamping: source))
+        }
+    }
+    
+    public init?<T>(exactly source: T) where T : BinaryInteger {
+        if let value = source as? UInt128 {
+            self.init(value)
+        } else if let value = UInt64(exactly: source){
+            self.init(value)
+        } else {
+            return nil
+        }
+    }
+    
+    public init<T>(_ source: T) where T : BinaryFloatingPoint {
+        if let value = source as? UInt128 {
+            self.init(value)
+        } else {
+            self.init(UInt64(source))
+        }
+    }
+    
+    public init<T>(truncatingIfNeeded source: T) where T : BinaryInteger {
+        if let value = source as? UInt128 {
+            self.init(value)
+        } else {
+            self.init(UInt64(truncatingIfNeeded: source))
+        }
+    }
+    
+    public var words: UInt128.Words {
+        return value.lowerBits.words
+    }
+    
+    public typealias Words = UInt64.Words
+    
+//    public typealias Words =
+    
+    public var bitWidth: Int {
+        return value.lowerBits.bitWidth + value.upperBits.bitWidth
+    }
+    
+    public var trailingZeroBitCount: Int {
+        if value.lowerBits.trailingZeroBitCount == value.lowerBits.bitWidth {
+            return value.lowerBits.trailingZeroBitCount + value.upperBits.trailingZeroBitCount
+        }
+        return value.lowerBits.trailingZeroBitCount
+    }
+    
     public func toIntMax() -> IntMax {
         precondition(self.value.lowerBits <= UInt64(IntMax.max) && self.value.upperBits == 0, "Converting `self` to 'IntMax' causes an integer overflow")
         return IntMax(value.lowerBits)
@@ -630,12 +701,16 @@ extension UInt128: IntegerArithmetic {
                 UInt128(upperBits: secondBitSegment, lowerBits: 0) &+
                 UInt128(upperBits: thirdBitSegment >> 32, lowerBits: thirdBitSegment << 32) &+
                 UInt128(fourthBitSegment),
-            overflow || firstBitSegment >> 32 > 0
+             overflow || firstBitSegment >> 32 > 0
         )
     }
 }
 public func +(lhs: UInt128, rhs: UInt128) -> UInt128 {
     precondition(~lhs >= rhs, "Addition overflow!")
+    let (result, _) = UInt128.addWithOverflow(lhs, rhs)
+    return result
+}
+public func &+(lhs: UInt128, rhs: UInt128) -> UInt128 {
     let (result, _) = UInt128.addWithOverflow(lhs, rhs)
     return result
 }
@@ -653,6 +728,10 @@ postfix public func ++(lhs: inout UInt128) -> UInt128 {
 }
 public func -(lhs: UInt128, rhs: UInt128) -> UInt128 {
     precondition(lhs >= rhs, "Integer underflow")
+    let (result, _) = UInt128.subtractWithOverflow(lhs, rhs)
+    return result
+}
+public func &-(lhs: UInt128, rhs: UInt128) -> UInt128 {
     let (result, _) = UInt128.subtractWithOverflow(lhs, rhs)
     return result
 }
