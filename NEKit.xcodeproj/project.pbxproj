@@ -1197,6 +1197,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 36C48D521CF88DED0071804F /* Build configuration list for PBXNativeTarget "NEKit-iOS" */;
 			buildPhases = (
+				CEAF96CB1F75793A0003CC1C /* Carthage */,
 				36B05A1B1DE4503800074910 /* ShellScript */,
 				36C48D481CF88DED0071804F /* Sources */,
 				36C48D491CF88DED0071804F /* Frameworks */,
@@ -1379,6 +1380,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "KEYWORDS=\"TODO:|FIXME:|\\?\\?\\?:|\\!\\!\\!:\"\nFILE_EXTENSIONS=\"swift|h|m|mm|c|cpp\"\nfind -E \"${SRCROOT}\" -ipath \"${SRCROOT}/Carthage\" -prune -o -ipath \"${SRCROOT}/pods\" -prune -o -ipath \"${SRCROOT}/tun2socks\" -prune -o \\( -regex \".*\\.($FILE_EXTENSIONS)$\" \\) -print0 | xargs -0 egrep --with-filename --line-number --only-matching \"($KEYWORDS).*\\$\" | perl -p -e \"s/($KEYWORDS)/ warning: \\$1/\"\n";
+		};
+		CEAF96CB1F75793A0003CC1C /* Carthage */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Carthage;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nif [ ! -e $PROJECT_DIR/Carthage/done ] ; then\necho running Carthage\ncd $PROJECT_DIR\ncarthage update --no-use-binaries --platform ios\ntouch $PROJECT_DIR/Carthage/done\nelse\necho Directory exists, skipping running of Carthage\nfi";
 		};
 		E60ADF4730A8B268DBD07CAC /* Set version number */ = {
 			isa = PBXShellScriptBuildPhase;
