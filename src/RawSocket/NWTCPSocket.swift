@@ -5,7 +5,7 @@ import CocoaLumberjackSwift
 /// The TCP socket build upon `NWTCPConnection`.
 ///
 /// - warning: This class is not thread-safe.
-public class NWTCPSocket: NSObject, RawTCPSocketProtocol {
+public class NWTCPSocket: NSObject, RawTCPSocketProtocol, NWTCPConnectionAuthenticationDelegate {
     private var connection: NWTCPConnection?
 
     private var writePending = false
@@ -70,8 +70,8 @@ public class NWTCPSocket: NSObject, RawTCPSocketProtocol {
         if let tlsSettings = tlsSettings as? [String: AnyObject] {
             tlsParameters.setValuesForKeys(tlsSettings)
         }
-
-        guard let connection = RawSocketFactory.TunnelProvider?.createTCPConnection(to: endpoint, enableTLS: enableTLS, tlsParameters: tlsParameters, delegate: nil) else {
+        
+        guard let connection = RawSocketFactory.TunnelProvider?.createTCPConnection(to: endpoint, enableTLS: enableTLS, tlsParameters: tlsParameters, delegate: self) else {
             // This should only happen when the extension is already stopped and `RawSocketFactory.TunnelProvider` is set to `nil`.
             return
         }
@@ -326,5 +326,34 @@ public class NWTCPSocket: NSObject, RawTCPSocketProtocol {
         }
 
         connection.removeObserver(self, forKeyPath: "state")
+    }
+    
+    
+    
+    
+    // MARK: NWTCPConnectionAuthenticationDelegate
+    public func shouldEvaluateTrust(for connection: NWTCPConnection) -> Bool
+    {
+        return true
+    }
+    
+    
+    public func evaluateTrust(for connection: NWTCPConnection, peerCertificateChain: [Any], completionHandler completion: @escaping (SecTrust) -> Swift.Void)
+    {
+        let policy = SecPolicyCreateBasicX509()
+        
+        //        let certificate = SecCertificateCreateWithData(nil, peerCertificateChain.last as! CFData)
+        
+        var optionalTrust: SecTrust?
+        
+        let status = SecTrustCreateWithCertificates(peerCertificateChain as AnyObject,
+                                                    policy,
+                                                    &optionalTrust)
+        
+        NSLog("status:  \(status)")
+        
+        SecTrustSetAnchorCertificates(optionalTrust!,[peerCertificateChain.last as! CFData] as CFArray)
+        
+        completion(optionalTrust!)
     }
 }
